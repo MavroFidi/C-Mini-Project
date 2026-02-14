@@ -1,13 +1,35 @@
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
+#include <time.h>
 #include "security.h"
 
-void codeInitial() {
-  int a;
-  printf("How many people do you wish access for? ");
-  scanf("%d",&a);
+unsigned char accessCode[256];
+unsigned char resetCode[256];
+unsigned char arr[256];
 
-  
+void shuffle(unsigned char arr[256]) {
+
+    for (int i = 255; i > 0; i--) {
+        int j = rand() % (i + 1);
+
+        unsigned char temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
+
+void codeInitial() {
+
+    srand(time(NULL));
+    for (int i = 0; i < 256; i++) {
+        arr[i] = i;
+    }
+    shuffle(arr);
+}
+
+int main() {
+    codeInitial();
+    for (int i = 0; i < 256; i++) {
+        accessCode[i] = arr[i];
+    }
 }
