@@ -3,13 +3,25 @@
 #include <time.h>
 #include "security.h"
 
-unsigned char accessCode[256];
-unsigned char resetCode[256];
-unsigned char arr[256];
 
-void shuffle(unsigned char arr[256]) {
+unsigned char (*initializeCodes(int numArrays))[CODE_LENGTH] {
+    unsigned char (*userCodes)[CODE_LENGTH] = malloc(numArrays * sizeof(*userCodes));
+    if (userCodes == NULL) return NULL;
+    
+    srand(time(NULL));
+    for (int i = 0; i < numArrays; i++) {
+         for (int j = 0; j < CODE_LENGTH; j++) {
+            userCodes[i][j] = j;
+        }
+        shuffle(userCodes[i]);
+    }
+    
+    return userCodes;
+}
 
-    for (int i = 255; i > 0; i--) {
+void shuffle(unsigned char arr[50]) {
+
+    for (int i = 49; i > 0; i--) {
         int j = rand() % (i + 1);
 
         unsigned char temp = arr[i];
@@ -18,18 +30,8 @@ void shuffle(unsigned char arr[256]) {
     }
 }
 
-void codeInitial() {
 
-    srand(time(NULL));
-    for (int i = 0; i < 256; i++) {
-        arr[i] = i;
-    }
-    shuffle(arr);
-}
-
-int main() {
-    codeInitial();
-    for (int i = 0; i < 256; i++) {
-        accessCode[i] = arr[i];
-    }
+void main(int argc, char *argv[]) {
+    int numArrays = atoi(argv[1]);
+    unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
 }
