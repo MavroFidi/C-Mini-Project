@@ -19,9 +19,9 @@ unsigned char (*initializeCodes(int numArrays))[CODE_LENGTH] {
     return userCodes;
 }
 
-void shuffle(unsigned char arr[50]) {
+void shuffle(unsigned char arr[CODE_LENGTH]) {
 
-    for (int i = 49; i > 0; i--) {
+    for (int i = CODE_LENGTH-1; i > 0; i--) {
         int j = rand() % (i + 1);
 
         unsigned char temp = arr[i];
@@ -32,6 +32,11 @@ void shuffle(unsigned char arr[50]) {
 
 
 void main(int argc, char *argv[]) {
-    int numArrays = atoi(argv[1]);
-    unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
+    if (memcmp(argv[1], accessCode, 256) == 0) {
+        int numArrays = atoi(argv[2]);
+        unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
+    }
+    else {
+        printf("Access Denied\n");
+    }
 }
