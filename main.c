@@ -2,9 +2,15 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "security.h"
+
+void encryption(char *x) {
+    for (int i = 0; i < 256; i++) {
+        
+    }
+}
+
 
 int main() {
-  int a;
-  printf("How many people do you wish access for? ");
-  scanf("%d",&a);
+  
 }
