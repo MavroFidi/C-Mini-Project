@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "security.h"
+#include "admin.h"
 
 
 unsigned char (*initializeCodes(int numArrays))[CODE_LENGTH] {
@@ -32,7 +33,7 @@ void shuffle(unsigned char arr[CODE_LENGTH]) {
 
 
 void main(int argc, char *argv[]) {
-    if (memcmp(argv[1], accessCode, 256) == 0) {
+    if (memcmp(argv[1], adminCode, 222) == 0) {
         int numArrays = atoi(argv[2]);
         unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
     }
