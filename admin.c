@@ -32,6 +32,13 @@ void resetCodeInitial(unsigned char adminCode[256]) {
 
 }
 
+void printcode(adminCode[256]) {
+    for (int i = 0; i < 256; i++) {
+        
+        printf("%c\n",(char)adminCode[i]);
+    }
+}
+
 void main() {
     srand(time(NULL));
 
@@ -40,5 +47,6 @@ void main() {
     }
 
     shuffle(adminCode);
+    printcode(adminCode);
     resetCodeInitial(adminCode);
 }
