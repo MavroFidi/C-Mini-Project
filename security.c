@@ -31,11 +31,22 @@ void shuffle(unsigned char arr[CODE_LENGTH]) {
     }
 }
 
+void printcode(int a) {
+    for (int i = 0; i < a; i++) {
+        printf("User Code %i: ");
+        for (int j = 0; ; j < 222; j++) {
+            printf("%c", usercode[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 
 void main(int argc, char *argv[]) {
     if (memcmp(argv[1], adminCode, 222) == 0) {
         int numArrays = atoi(argv[2]);
         unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
+        printcode(numArrays)
     }
     else {
         printf("Access Denied\n");
