@@ -18,7 +18,7 @@ void shuffle(unsigned char adminCode[222]) {
 void printcode(adminCode[222]) {
     for (int i = 0; i < 222; i++) {
         
-        printf("%c\n",(char)adminCode[i]);
+        printf("%c",(char)adminCode[i]);
     }
 }
 
