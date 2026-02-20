@@ -44,7 +44,9 @@ void printcode(int a) {
 
 void main(int argc, char *argv[]) {
     if (memcmp(argv[1], adminCode, 222) == 0) {
-        int numArrays = atoi(argv[2]);
+        int numArrays;
+        printf("Enter the number of user codes you wish to initialize. ")
+        scanf("%i", &numArrays);
         unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
         printcode(numArrays)
     }
