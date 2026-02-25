@@ -4,17 +4,15 @@
 #include "security.h"
 #include "admin.h"
 
-unsigned char (*initializeCodes(int numArrays)) [CODE_LENGTH]
-{
+unsigned char (*initializeCodes(int numArrays)) [CODE_LENGTH] {
     unsigned char (*userCodes)[CODE_LENGTH] = malloc(numArrays * sizeof(*userCodes));
-    if (userCodes == NULL)
+    if (userCodes == NULL) {
         return NULL;
+    }
 
     srand(time(NULL));
-    for (int i = 0; i < numArrays; i++)
-    {
-        for (int j = 0; j < CODE_LENGTH; j++)
-        {
+    for (int i = 0; i < numArrays; i++) {
+        for (int j = 0; j < CODE_LENGTH; j++) {
             userCodes[i][j] = j;
         }
         shuffle(userCodes[i]);
@@ -23,11 +21,9 @@ unsigned char (*initializeCodes(int numArrays)) [CODE_LENGTH]
     return userCodes;
 }
 
-void shuffle(unsigned char arr[CODE_LENGTH])
-{
+void shuffle(unsigned char arr[CODE_LENGTH]) {
 
-    for (int i = CODE_LENGTH - 1; i > 0; i--)
-    {
+    for (int i = CODE_LENGTH - 1; i > 0; i--) {
         int j = rand() % (i + 1);
 
         unsigned char temp = arr[i];
@@ -36,35 +32,29 @@ void shuffle(unsigned char arr[CODE_LENGTH])
     }
 }
 
-void printcode(int a)
-{
-    for (int i = 0; i < a; i++)
-    {
+void printcode(int a) {
+    for (int i = 0; i < a; i++) {
         printf("User Code %i: ");
-        for (int j = 0;; j < 222; j++)
-        {
+        for (int j = 0;; j < 222; j++) {
             printf("%c", usercode[i][j]);
         }
         printf("\n");
     }
 }
 
-void main()
-{
+void main() {
     char *admincode;
     printf("Enter the admin code: ");
     scanf("%s", admincode);
 
-    if (memcmp(argv[1], adminCode, 222) == 0)
-    {
+    if (memcmp(argv[1], adminCode, 222) == 0) {
         int numArrays;
         printf("Enter the number of user codes you wish to initialize. ");
         scanf("%i", &numArrays);
         unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
         printcode(numArrays);
     }
-    else
-    {
+    else {
         printf("Access Denied\n");
     }
 }
