@@ -53,8 +53,8 @@ void shuffle(unsigned char arr[CODE_LENGTH]) {
 
 void printcode(int a) {
     for (int i = 0; i < a; i++) {
-        printf("User Code %i: ");
-        for (int j = 0;; j < 222; j++) {
+        printf("User Code %i: ",i);
+        for (int j = 0; j < 50; j++) {
             printf("%c", usercode[i][j]);
         }
         printf("\n");
@@ -67,7 +67,6 @@ void main() {
     scanf("%s", admincode);
 
     if (memcmp(argv[1], adminCode, 222) == 0) {
-        int numArrays;
         printf("Enter the number of user codes you wish to initialize. ");
         scanf("%i", &numArrays);
         unsigned char (*userCodes)[CODE_LENGTH] = initializeCodes(numArrays);
