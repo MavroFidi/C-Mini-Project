@@ -3,55 +3,47 @@
 #include <string.h>
 #include <time.h>
 
-typedef struct 
-{
+typedef struct {
     char name[50];
     char passcode[16];
 } User;
 
-int main(void) 
-{
+int main(void) {
     int n;
     printf("Enter number of users: ");
     if (scanf("%d", &n) != 1 || n <= 0) {
         printf("Invalid number.\n");
         return 1;
-}
+    }
     int c;
-    while ((c = getchar()) != '\n' && c != EOF) { }
+    while ((c = getchar()) != '\n' && c != EOF) {}
 
     User *users = malloc(sizeof(User) * n);
-    if (!users) 
-{
+    if (!users) {
         printf("Memory allocation failed.\n");
         return 1;
-}
+    }
 
-    srand((unsigned)time(NULL));
+    srand((unsigned int)time(NULL));
 
-for (int i = 0; i < n; i++) 
-{
+    for (int i = 0; i < n; i++) {
         printf("Enter name for user %d: ", i + 1);
-if (!fgets(users[i].name, sizeof(users[i].name), stdin)) 
-{
+        if (!fgets(users[i].name, sizeof(users[i].name), stdin)) {
             users[i].name[0] = '\0';
-} 
-else 
-{
-        
+        } else {
             char *p = strchr(users[i].name, '\n');
             if (p) *p = '\0';
-}
-        int code = rand() % 900000 + 100000; 
-        sprintf(users[i].passcode, "%06d", code);
-}
+        }
 
-printf("\nAssigned users and passcodes:\n");
-for (int i = 0; i < n; i++) 
-{
+        int code = rand() % 900000 + 100000;
+        sprintf(users[i].passcode, "%06d", code);
+    }
+
+    printf("\nAssigned users and passcodes:\n");
+    for (int i = 0; i < n; i++) {
         printf("%d: Name=\"%s\", Passcode=\"%s\"\n",
                i + 1, users[i].name, users[i].passcode);
-}
+    }
 
     free(users);
     return 0;
