@@ -2,26 +2,28 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
+#include "database.h"
 
 #define DB_FILE "app.db"
 
 static sqlite3 *db = NULL;
 static int current_user_id = 0;
 
-void fatal(const char *msg) {
+/* ── helpers ─────────────────────────────────────────────────────────────── */
+static void fatal(const char *msg) {
     fprintf(stderr, "Error: %s\n", msg);
     exit(1);
 }
 
-void check_rc(int rc, const char *msg) {
+static void check_rc(int rc, const char *msg) {
     if (rc != SQLITE_OK && rc != SQLITE_DONE && rc != SQLITE_ROW) {
         fprintf(stderr, "SQLite error (%s): %s\n", msg, sqlite3_errmsg(db));
         exit(1);
     }
 }
 
-void init_db(void) {
-    int rc;
+/* ── schema ──────────────────────────────────────────────────────────────── */
+static void init_schema(void) {
     const char *sql =
         "PRAGMA foreign_keys = ON;"
         "CREATE TABLE IF NOT EXISTS user ("
@@ -35,25 +37,38 @@ void init_db(void) {
         "    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP"
         ");";
 
-    rc = sqlite3_exec(db, sql, 0, 0, NULL);
+    int rc = sqlite3_exec(db, sql, 0, 0, NULL);
     check_rc(rc, "init schema");
 }
 
+/* ── public DB lifecycle ─────────────────────────────────────────────────── */
 void open_db(void) {
     int rc = sqlite3_open(DB_FILE, &db);
     if (rc) fatal("cannot open database");
-    init_db();
+    init_schema();
 }
 
 void close_db(void) {
     if (db) sqlite3_close(db);
+    db = NULL;
 }
 
-void register_user(void) {
+/* Aliases used by main.c */
+int init_database(void) {
+    open_db();
+    return (db != NULL) ? 1 : 0;
+}
+
+void close_database(void) {
+    close_db();
+}
+
+/* ── user operations ─────────────────────────────────────────────────────── */
+static void register_user(void) {
     char password[128];
 
-    printf("register\n");
-    printf("password: ");
+    printf("Register\n");
+    printf("Password: ");
     if (!fgets(password, sizeof(password), stdin)) return;
     password[strcspn(password, "\n")] = '\0';
 
@@ -66,20 +81,19 @@ void register_user(void) {
     sqlite3_bind_text(stmt, 1, password, -1, SQLITE_TRANSIENT);
 
     rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) {
-        printf("registration failed\n");
-    } else {
-        printf("registered successfully\n");
-    }
+    if (rc != SQLITE_DONE)
+        printf("Registration failed.\n");
+    else
+        printf("Registered successfully.\n");
 
     sqlite3_finalize(stmt);
 }
 
-int login(void) {
+static int do_login(void) {
     char password[128];
 
-    printf("login\n");
-    printf("password: ");
+    printf("Login\n");
+    printf("Password: ");
     if (!fgets(password, sizeof(password), stdin)) return 0;
     password[strcspn(password, "\n")] = '\0';
 
@@ -91,7 +105,7 @@ int login(void) {
 
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         const unsigned char *stored = sqlite3_column_text(stmt, 1);
-        if (strcmp((const char*)stored, password) == 0) {
+        if (strcmp((const char *)stored, password) == 0) {
             current_user_id = sqlite3_column_int(stmt, 0);
             sqlite3_finalize(stmt);
             return 1;
@@ -99,11 +113,12 @@ int login(void) {
     }
 
     sqlite3_finalize(stmt);
-    printf("login failed\n");
+    printf("Login failed.\n");
     return 0;
 }
 
-void list_all_notes(void) {
+/* ── note operations ─────────────────────────────────────────────────────── */
+static void list_all_notes(void) {
     sqlite3_stmt *stmt;
     const char *sql =
         "SELECT id, content, updated_at "
@@ -113,28 +128,26 @@ void list_all_notes(void) {
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     check_rc(rc, "prepare select notes");
 
-    printf("\n===== all notes =====\n");
-
+    printf("\n===== All Notes =====\n");
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         int id = sqlite3_column_int(stmt, 0);
-        const char *content = (const char*)sqlite3_column_text(stmt, 1);
-        const char *updated = (const char*)sqlite3_column_text(stmt, 2);
-
+        const char *content = (const char *)sqlite3_column_text(stmt, 1);
+        const char *updated = (const char *)sqlite3_column_text(stmt, 2);
         printf("%3d | %s | %s\n", id, content, updated);
     }
 
     sqlite3_finalize(stmt);
 }
 
-void add_note(void) {
+static void add_note(void) {
     char buf[1024];
 
-    printf("content: ");
+    printf("Content: ");
     if (!fgets(buf, sizeof(buf), stdin)) return;
     buf[strcspn(buf, "\n")] = '\0';
 
     sqlite3_stmt *stmt;
-    const char *sql = "INSERT INTO note(owner_id,content) VALUES(?,?)";
+    const char *sql = "INSERT INTO note(owner_id, content) VALUES(?, ?)";
 
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
     check_rc(rc, "prepare insert note");
@@ -143,18 +156,18 @@ void add_note(void) {
     sqlite3_bind_text(stmt, 2, buf, -1, SQLITE_TRANSIENT);
 
     rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) printf("failed to add note\n");
+    if (rc != SQLITE_DONE) printf("Failed to add note.\n");
 
     sqlite3_finalize(stmt);
 }
 
-void edit_note(void) {
+static void edit_note(void) {
     int note_id;
     char buf[1024];
 
-    printf("note id to edit: ");
-    if (scanf("%d", &note_id) != 1) { while(getchar()!= '\n'); return; }
-    while(getchar()!= '\n');
+    printf("Note ID to edit: ");
+    if (scanf("%d", &note_id) != 1) { while (getchar() != '\n'); return; }
+    while (getchar() != '\n');
 
     sqlite3_stmt *stmt;
     const char *checksql = "SELECT owner_id FROM note WHERE id = ?";
@@ -165,15 +178,14 @@ void edit_note(void) {
     sqlite3_bind_int(stmt, 1, note_id);
     rc = sqlite3_step(stmt);
 
-    if (rc != SQLITE_ROW || sqlite3_column_int(stmt,0) != current_user_id) {
-        printf("you don't own that note\n");
+    if (rc != SQLITE_ROW || sqlite3_column_int(stmt, 0) != current_user_id) {
+        printf("You don't own that note.\n");
         sqlite3_finalize(stmt);
         return;
     }
-
     sqlite3_finalize(stmt);
 
-    printf("new content: ");
+    printf("New content: ");
     if (!fgets(buf, sizeof(buf), stdin)) return;
     buf[strcspn(buf, "\n")] = '\0';
 
@@ -187,30 +199,31 @@ void edit_note(void) {
     sqlite3_bind_int(stmt, 2, note_id);
 
     rc = sqlite3_step(stmt);
-    if (rc != SQLITE_DONE) printf("failed to edit note\n");
+    if (rc != SQLITE_DONE) printf("Failed to edit note.\n");
 
     sqlite3_finalize(stmt);
 }
 
-void user_menu(void) {
+/* ── user menu (called from main.c via user_login()) ─────────────────────── */
+static void user_menu(void) {
     int done = 0;
 
     while (!done) {
         list_all_notes();
         printf("\nLogged in (id=%d)\n", current_user_id);
-        printf("1) add note\n");
-        printf("2) edit note (own only)\n");
-        printf("3) logout\n");
-        printf("choose> ");
+        printf("1) Add note\n");
+        printf("2) Edit note (own only)\n");
+        printf("3) Logout\n");
+        printf("Choose> ");
 
         int c;
-        if (scanf("%d", &c) != 1) { while(getchar()!= '\n'); continue; }
-        while(getchar()!= '\n');
+        if (scanf("%d", &c) != 1) { while (getchar() != '\n'); continue; }
+        while (getchar() != '\n');
 
-        switch(c) {
-            case 1: add_note(); break;
+        switch (c) {
+            case 1: add_note();  break;
             case 2: edit_note(); break;
-            case 3: done = 1; break;
+            case 3: done = 1;    break;
             default: break;
         }
     }
@@ -218,32 +231,6 @@ void user_menu(void) {
     current_user_id = 0;
 }
 
-int main(void) {
-    open_db();
-
-    int running = 1;
-
-    while (running) {
-        printf("\n=== menu ===\n");
-        printf("1) register\n");
-        printf("2) login\n");
-        printf("3) quit\n");
-        printf("choose> ");
-
-        int c;
-        if (scanf("%d", &c) != 1) { while(getchar()!= '\n'); continue; }
-        while(getchar()!= '\n');
-
-        switch(c) {
-            case 1: register_user(); break;
-            case 2:
-                if (login()) user_menu();
-                break;
-            case 3: running = 0; break;
-            default: break;
-        }
-    }
-
-    close_db();
-    return 0;
+void user_login(void) {
+    if (do_login()) user_menu();
 }
