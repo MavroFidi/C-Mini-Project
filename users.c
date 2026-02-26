@@ -15,7 +15,6 @@ int main(void) {
         printf("Invalid number.\n");
         return 1;
     }
-    /* consume leftover newline from scanf */
     int c;
     while ((c = getchar()) != '\n' && c != EOF) { }
 
@@ -36,8 +35,7 @@ int main(void) {
             char *p = strchr(users[i].name, '\n');
             if (p) *p = '\0';
         }
-        /* simple 6-digit numeric passcode */
-        int code = rand() % 900000 + 100000; /* 100000..999999 */
+        int code = rand() % 900000 + 100000; 
         sprintf(users[i].passcode, "%06d", code);
     }
 
