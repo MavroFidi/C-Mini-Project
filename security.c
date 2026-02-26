@@ -12,11 +12,30 @@ unsigned char (*initializeCodes(int numArrays)) [CODE_LENGTH] {
 
     srand(time(NULL));
     for (int i = 0; i < numArrays; i++) {
-        for (int j = 0; j < CODE_LENGTH; j++) {
-            userCodes[i][j] = j;
+    char Usercode[100];
+
+    while (1) {
+        printf("Enter the user code %i: ", i);
+        fgets(Usercode, sizeof(Usercode), stdin);
+
+        size_t len = strlen(Usercode);
+        if (len > 0 && Usercode[len - 1] == '\n') {
+            Usercode[len - 1] = '\0';
         }
-        shuffle(userCodes[i]);
+
+        if (len == sizeof(Usercode) - 1 && Usercode[len - 1] != '\n') {
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+        }
+
+        if (len == 50) {
+            break;
+        }
+        else {
+            printf("Invalid user code. Please enter a 50-character code.\n");
+        }
     }
+}
 
     return userCodes;
 }
