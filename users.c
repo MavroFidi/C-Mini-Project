@@ -2,29 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include "users.h"
+#include "database.h"
 
-typedef struct {
-    char name[50];
-    char passcode[16];
-} User;
-
-int main(void) {
-    int n;
-    printf("Enter number of users: ");
-    if (scanf("%d", &n) != 1 || n <= 0) {
-        printf("Invalid number.\n");
-        return 1;
-    }
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {}
-
+User *create_users(int n) {
     User *users = malloc(sizeof(User) * n);
     if (!users) {
         printf("Memory allocation failed.\n");
-        return 1;
+        return NULL;
     }
-
-    srand((unsigned int)time(NULL));
 
     for (int i = 0; i < n; i++) {
         printf("Enter name for user %d: ", i + 1);
@@ -39,12 +25,56 @@ int main(void) {
         sprintf(users[i].passcode, "%06d", code);
     }
 
+    return users;
+}
+
+void print_users(int n, User *users) {
     printf("\nAssigned users and passcodes:\n");
     for (int i = 0; i < n; i++) {
         printf("%d: Name=\"%s\", Passcode=\"%s\"\n",
                i + 1, users[i].name, users[i].passcode);
     }
+}
 
+void initialize_users(void) {
+    int n;
+    printf("Enter number of users: ");
+    if (scanf("%d", &n) != 1 || n <= 0) {
+        while (getchar() != '\n');
+        printf("Invalid number.\n");
+        return;
+    }
+    while (getchar() != '\n');
+
+    User *users = create_users(n);
+    if (!users) return;
+
+    /* Save each user to the database */
+    for (int i = 0; i < n; i++) {
+        save_user(&users[i]);
+    }
+
+    print_users(n, users);
+    free_users(users);
+}
+
+void free_users(User *users) {
     free(users);
-    return 0;
+}
+
+int login_user(User *out_user) {
+    char name[50];
+    char passcode[16];
+
+    printf("Enter name: ");
+    if (!fgets(name, sizeof(name), stdin)) return 0;
+    char *p = strchr(name, '\n');
+    if (p) *p = '\0';
+
+    printf("Enter passcode: ");
+    if (!fgets(passcode, sizeof(passcode), stdin)) return 0;
+    p = strchr(passcode, '\n');
+    if (p) *p = '\0';
+
+    return find_user(name, passcode, out_user);
 }
