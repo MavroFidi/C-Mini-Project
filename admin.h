@@ -2,6 +2,7 @@
 #define ADMIN_H
 
 #define ADMIN_CODE_LENGTH 222
+#define SAFE_CHARS_LEN 62
 
 extern unsigned char adminCode[ADMIN_CODE_LENGTH];
 extern unsigned char resetCode[ADMIN_CODE_LENGTH];
