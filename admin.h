@@ -1,7 +1,7 @@
 #ifndef ADMIN_H
 #define ADMIN_H
 
-#define ADMIN_CODE_LENGTH 1
+#define ADMIN_CODE_LENGTH 222
 
 extern unsigned char adminCode[ADMIN_CODE_LENGTH];
 extern unsigned char resetCode[ADMIN_CODE_LENGTH];
