@@ -3,8 +3,16 @@
 #include <time.h>
 #include "admin.h"
 
-unsigned char adminCode[1];
-unsigned char resetCode[1];
+unsigned char adminCode[ADMIN_CODE_LENGTH];
+unsigned char resetCode[ADMIN_CODE_LENGTH];
+
+/* Safe alphanumeric characters only — no special chars, no control codes,
+   no characters that break terminals or copy-paste */
+static const char safe_chars[] =
+    "abcdefghijklmnopqrstuvwxyz"
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "0123456789";
+#define SAFE_CHARS_LEN 62
 
 void shuffle(unsigned char arr[ADMIN_CODE_LENGTH]) {
     for (int i = ADMIN_CODE_LENGTH - 1; i > 0; i--) {
@@ -47,11 +55,10 @@ int load_admin_codes(void) {
 void generate_admin_codes(void) {
     srand((unsigned int)time(NULL));
 
-    int j = 0;
-    for (int i = 33; i < 256; i++) {
-        adminCode[j] = (unsigned char)i;
-        resetCode[j] = (unsigned char)i;
-        j++;
+    /* Fill with random safe alphanumeric characters */
+    for (int i = 0; i < ADMIN_CODE_LENGTH; i++) {
+        adminCode[i] = (unsigned char)safe_chars[rand() % SAFE_CHARS_LEN];
+        resetCode[i] = (unsigned char)safe_chars[rand() % SAFE_CHARS_LEN];
     }
 
     shuffle(adminCode);
