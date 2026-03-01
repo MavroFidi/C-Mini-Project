@@ -5,6 +5,46 @@
 #include "users.h"
 #include "database.h"
 
+static void get_passcode_input(char *out_passcode) {
+    char raw[52];
+
+    while (1) {
+        printf("  Enter password (10-50 characters): ");
+        if (!fgets(raw, sizeof(raw), stdin)) {
+            raw[0] = '\0';
+            continue;
+        }
+
+        char *nl = strchr(raw, '\n');
+        if (!nl) {
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf("  Too long. Maximum is 50 characters.\n");
+            continue;
+        }
+        *nl = '\0';
+
+        size_t len = strlen(raw);
+        if (len < 10) {
+            printf("  Too short. Minimum is 10 characters.\n");
+            continue;
+        }
+
+        /* Generate a random salt */
+        unsigned int salt = (unsigned int)rand();
+
+        /* Scramble with the salt */
+        char scrambled[51];
+        substitution_cipher(raw, scrambled, salt);
+
+        /* Store as "SALT:SCRAMBLED" */
+        sprintf(out_passcode, "%u:%s", salt, scrambled);
+
+        printf("  Scrambled passcode: %s\n", scrambled);
+        break;
+    }
+}
+
 User *create_users(int n) {
     User *users = malloc(sizeof(User) * n);
     if (!users) {
