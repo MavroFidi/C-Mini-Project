@@ -12,7 +12,6 @@ static const char safe_chars[] =
     "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "0123456789";
-#define SAFE_CHARS_LEN 62
 
 void shuffle(unsigned char arr[ADMIN_CODE_LENGTH]) {
     for (int i = ADMIN_CODE_LENGTH - 1; i > 0; i--) {
