@@ -4,8 +4,9 @@
 #include <time.h>
 #include "users.h"
 #include "database.h"
+#include "encryption.h"
 
-static void get_passcode_input(char *out_passcode) {
+void get_passcode_input(char *out_passcode) {
     char raw[52];
 
     while (1) {
@@ -45,6 +46,7 @@ static void get_passcode_input(char *out_passcode) {
     }
 }
 
+/* ── create_users ────────────────────────────────────────────────────────── */
 User *create_users(int n) {
     User *users = malloc(sizeof(User) * n);
     if (!users) {
@@ -53,7 +55,9 @@ User *create_users(int n) {
     }
 
     for (int i = 0; i < n; i++) {
-        printf("Enter name for user %d: ", i + 1);
+        printf("User %d:\n", i + 1);
+
+        printf("  Enter name: ");
         if (!fgets(users[i].name, sizeof(users[i].name), stdin)) {
             users[i].name[0] = '\0';
         } else {
@@ -61,21 +65,25 @@ User *create_users(int n) {
             if (p) *p = '\0';
         }
 
-        int code = rand() % 900000 + 100000;
-        sprintf(users[i].passcode, "%06d", code);
+        get_passcode_input(users[i].passcode);
     }
 
     return users;
 }
 
+/* ── print_users ─────────────────────────────────────────────────────────── */
 void print_users(int n, User *users) {
-    printf("\nAssigned users and passcodes:\n");
+    printf("\nAssigned users and scrambled passcodes:\n");
     for (int i = 0; i < n; i++) {
-        printf("%d: Name=\"%s\", Passcode=\"%s\"\n",
-               i + 1, users[i].name, users[i].passcode);
+        /* Print only the scrambled part (after the colon) for display */
+        char *colon = strchr(users[i].passcode, ':');
+        const char *display = colon ? colon + 1 : users[i].passcode;
+        printf("%d: Name=\"%s\", Scrambled Passcode=\"%s\"\n",
+               i + 1, users[i].name, display);
     }
 }
 
+/* ── initialize_users ────────────────────────────────────────────────────── */
 void initialize_users(void) {
     int n;
     printf("Enter number of users: ");
@@ -89,7 +97,6 @@ void initialize_users(void) {
     User *users = create_users(n);
     if (!users) return;
 
-    /* Save each user to the database */
     for (int i = 0; i < n; i++) {
         save_user(&users[i]);
     }
@@ -98,23 +105,56 @@ void initialize_users(void) {
     free_users(users);
 }
 
+/* ── free_users ──────────────────────────────────────────────────────────── */
 void free_users(User *users) {
     free(users);
 }
 
+/* ── login_user ──────────────────────────────────────────────────────────── *
+ * Looks up the stored "SALT:SCRAMBLED" for the given name, extracts the salt,
+ * re-scrambles the input password with that salt, then compares.
+ * ─────────────────────────────────────────────────────────────────────────── */
 int login_user(User *out_user) {
     char name[50];
-    char passcode[16];
+    char raw[52];
 
     printf("Enter name: ");
     if (!fgets(name, sizeof(name), stdin)) return 0;
     char *p = strchr(name, '\n');
     if (p) *p = '\0';
 
-    printf("Enter passcode: ");
-    if (!fgets(passcode, sizeof(passcode), stdin)) return 0;
-    p = strchr(passcode, '\n');
+    printf("Enter password: ");
+    if (!fgets(raw, sizeof(raw), stdin)) return 0;
+    p = strchr(raw, '\n');
     if (p) *p = '\0';
 
-    return find_user(name, passcode, out_user);
+    /* Fetch the stored "SALT:SCRAMBLED" from the database */
+    User stored;
+    if (!get_stored_passcode(name, &stored)) {
+        printf("Login failed. Invalid name or password.\n");
+        return 0;
+    }
+
+    /* Extract the salt from the stored passcode */
+    char *colon = strchr(stored.passcode, ':');
+    if (!colon) {
+        printf("Login failed. Corrupted passcode format.\n");
+        return 0;
+    }
+    *colon = '\0';
+    unsigned int salt = (unsigned int)atoi(stored.passcode);
+    const char *stored_scrambled = colon + 1;
+
+    /* Scramble the login input with the same salt */
+    char attempt_scrambled[51];
+    substitution_cipher(raw, attempt_scrambled, salt);
+
+    if (strcmp(attempt_scrambled, stored_scrambled) == 0) {
+        strncpy(out_user->name, stored.name, 50);
+        strncpy(out_user->passcode, stored.passcode, 62);
+        return 1;
+    }
+
+    printf("Login failed. Invalid name or password.\n");
+    return 0;
 }
