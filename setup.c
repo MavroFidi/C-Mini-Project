@@ -4,11 +4,10 @@
 int main(void) {
     printf("Generating admin credentials...\n");
 
-    adminCode[0] = 'a';
-    resetCode[0] = 'a';
+    generate_admin_codes();
+    save_admin_codes();
 
     printf("Admin code:  "); printcode(adminCode); printf("\n");
-    printf("Reset code:  "); printcode(resetCode); printf("\n");
     printf("\nAdmin credentials saved to admin.bin\n");
     printf("Keep admin.bin in the same folder as app.exe\n");
 
