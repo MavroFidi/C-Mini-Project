@@ -6,8 +6,6 @@
 unsigned char adminCode[ADMIN_CODE_LENGTH];
 unsigned char resetCode[ADMIN_CODE_LENGTH];
 
-/* Safe alphanumeric characters only — no special chars, no control codes,
-   no characters that break terminals or copy-paste */
 static const char safe_chars[] =
     "abcdefghijklmnopqrstuvwxyz"
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
