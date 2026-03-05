@@ -49,14 +49,15 @@ int load_admin_codes(void) {
     return 1;
 }
 
-void generate_admin_codes(void) {
+void generate_admin_codes(void) 
+{
     srand((unsigned int)time(NULL));
-
-    /* Fill with random safe alphanumeric characters */
-    for (int i = 0; i < ADMIN_CODE_LENGTH; i++) {
+    for (int i = 0; i < ADMIN_CODE_LENGTH; i++) 
+    {
         adminCode[i] = (unsigned char)safe_chars[rand() % SAFE_CHARS_LEN];
         resetCode[i] = (unsigned char)safe_chars[rand() % SAFE_CHARS_LEN];
     }
+}
 
     shuffle(adminCode);
     shuffle(resetCode);
