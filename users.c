@@ -6,22 +6,19 @@
 #include "database.h"
 #include "encryption.h"
 
-void get_passcode_input(char *out_passcode) 
-{
+
+void get_passcode_input(char *out_passcode) {
     char raw[52];
 
-    while (1) 
-{
+    while (1) {
         printf("  Enter password (10-50 characters): ");
-        if (!fgets(raw, sizeof(raw), stdin)) 
-        {
+        if (!fgets(raw, sizeof(raw), stdin)) {
             raw[0] = '\0';
             continue;
         }
 
         char *nl = strchr(raw, '\n');
-        if (!nl) 
-       {
+        if (!nl) {
             int c;
             while ((c = getchar()) != '\n' && c != EOF);
             printf("  Too long. Maximum is 50 characters.\n");
@@ -30,15 +27,16 @@ void get_passcode_input(char *out_passcode)
         *nl = '\0';
 
         size_t len = strlen(raw);
-        if (len < 10) 
-        {
+        if (len < 10) {
             printf("  Too short. Minimum is 10 characters.\n");
             continue;
         }
 
         unsigned int salt = (unsigned int)rand();
+
         char scrambled[51];
         substitution_cipher(raw, scrambled, salt);
+
         sprintf(out_passcode, "%u:%s", salt, scrambled);
 
         printf("  Scrambled passcode: %s\n", scrambled);
@@ -46,11 +44,9 @@ void get_passcode_input(char *out_passcode)
     }
 }
 
-User *create_users(int n) 
-{
+User *create_users(int n) {
     User *users = malloc(sizeof(User) * n);
-    if (!users) 
-    {
+    if (!users) {
         printf("Memory allocation failed.\n");
         return NULL;
     }
@@ -59,39 +55,34 @@ User *create_users(int n)
         printf("User %d:\n", i + 1);
 
         printf("  Enter name: ");
-        if (!fgets(users[i].name, sizeof(users[i].name), stdin)) 
-        {
+        if (!fgets(users[i].name, sizeof(users[i].name), stdin)) {
             users[i].name[0] = '\0';
-        } 
-else 
-{
+        } else {
             char *p = strchr(users[i].name, '\n');
             if (p) *p = '\0';
-}
+        }
 
         get_passcode_input(users[i].passcode);
-}
+    }
 
     return users;
 }
-void print_users(int n, User *users) 
-{
+
+void print_users(int n, User *users) {
     printf("\nAssigned users and scrambled passcodes:\n");
-    for (int i = 0; i < n; i++) 
-{
+    for (int i = 0; i < n; i++) {
+        /* Print only the scrambled part (after the colon) for display */
         char *colon = strchr(users[i].passcode, ':');
         const char *display = colon ? colon + 1 : users[i].passcode;
         printf("%d: Name=\"%s\", Scrambled Passcode=\"%s\"\n",
                i + 1, users[i].name, display);
-}
+    }
 }
 
-void initialize_users(void) 
-{
+void initialize_users(void) {
     int n;
     printf("Enter number of users: ");
-    if (scanf("%d", &n) != 1 || n <= 0) 
-    {
+    if (scanf("%d", &n) != 1 || n <= 0) {
         while (getchar() != '\n');
         printf("Invalid number.\n");
         return;
@@ -101,8 +92,7 @@ void initialize_users(void)
     User *users = create_users(n);
     if (!users) return;
 
-    for (int i = 0; i < n; i++) 
-    {
+    for (int i = 0; i < n; i++) {
         save_user(&users[i]);
     }
 
@@ -110,13 +100,11 @@ void initialize_users(void)
     free_users(users);
 }
 
-void free_users(User *users) 
-{
+void free_users(User *users) {
     free(users);
 }
 
-int login_user(User *out_user) 
-{
+int login_user(User *out_user) {
     char name[50];
     char raw[52];
 
@@ -131,30 +119,28 @@ int login_user(User *out_user)
     if (p) *p = '\0';
 
     User stored;
-    if (!get_stored_passcode(name, &stored)) 
-    {
+    if (!get_stored_passcode(name, &stored)) {
         printf("Login failed. Invalid name or password.\n");
         return 0;
     }
 
     char *colon = strchr(stored.passcode, ':');
-    if (!colon) 
-    {
+    if (!colon) {
         printf("Login failed. Corrupted passcode format.\n");
         return 0;
     }
     *colon = '\0';
     unsigned int salt = (unsigned int)atoi(stored.passcode);
     const char *stored_scrambled = colon + 1;
+
     char attempt_scrambled[51];
     substitution_cipher(raw, attempt_scrambled, salt);
 
-    if (strcmp(attempt_scrambled, stored_scrambled) == 0) 
-{
+    if (strcmp(attempt_scrambled, stored_scrambled) == 0) {
         strncpy(out_user->name, stored.name, 50);
         strncpy(out_user->passcode, stored.passcode, 62);
         return 1;
-}
+    }
 
     printf("Login failed. Invalid name or password.\n");
     return 0;
