@@ -11,8 +11,10 @@ static const char safe_chars[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     "0123456789";
 
-void shuffle(unsigned char arr[ADMIN_CODE_LENGTH]) {
-    for (int i = ADMIN_CODE_LENGTH - 1; i > 0; i--) {
+void shuffle(unsigned char arr[ADMIN_CODE_LENGTH]) 
+{
+    for (int i = ADMIN_CODE_LENGTH - 1; i > 0; i--) 
+    {
         int j = rand() % (i + 1);
         unsigned char temp = arr[i];
         arr[i] = arr[j];
@@ -20,15 +22,18 @@ void shuffle(unsigned char arr[ADMIN_CODE_LENGTH]) {
     }
 }
 
-void printcode(unsigned char arr[ADMIN_CODE_LENGTH]) {
-    for (int i = 0; i < ADMIN_CODE_LENGTH; i++) {
+void printcode(unsigned char arr[ADMIN_CODE_LENGTH]) 
+{
+    for (int i = 0; i < ADMIN_CODE_LENGTH; i++) 
+    {
         printf("%c", (char)arr[i]);
     }
 }
 
 void save_admin_codes(void) {
     FILE *f = fopen("admin.bin", "wb");
-    if (!f) {
+    if (!f) 
+    {
         printf("Failed to save admin codes\n");
         exit(1);
     }
@@ -37,9 +42,11 @@ void save_admin_codes(void) {
     fclose(f);
 }
 
-int load_admin_codes(void) {
+int load_admin_codes(void) 
+{
     FILE *f = fopen("admin.bin", "rb");
-    if (!f) {
+    if (!f) 
+    {
         printf("Admin file missing!\n");
         return 0;
     }
@@ -57,8 +64,6 @@ void generate_admin_codes(void)
         adminCode[i] = (unsigned char)safe_chars[rand() % SAFE_CHARS_LEN];
         resetCode[i] = (unsigned char)safe_chars[rand() % SAFE_CHARS_LEN];
     }
-}
-
     shuffle(adminCode);
     shuffle(resetCode);
 }
